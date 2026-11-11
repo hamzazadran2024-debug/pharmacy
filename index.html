@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f9d8a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>PharmaCare – Pharmacy Management</title>
+<style>
+:root{--bg:#f2f7f6;--surface:#fff;--text:#16302b;--muted:#5f7a74;--line:#dde8e5;--brand:#0f9d8a;--brand2:#1a7f6e;--ok:#16a34a;--warn:#d97706;--danger:#e5484d;--shadow:0 4px 18px rgba(15,60,50,.09)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1716;--surface:#18221f;--text:#e8f3f0;--muted:#8fa8a1;--line:#27352f;--shadow:0 4px 18px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{--bg:#0f1716;--surface:#18221f;--text:#e8f3f0;--muted:#8fa8a1;--line:#27352f;--shadow:0 4px 18px rgba(0,0,0,.4)}
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+body{background:var(--bg);color:var(--text)}
+.header{position:fixed;top:0;left:0;right:0;height:calc(60px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 18px 0;z-index:100;background:linear-gradient(90deg,var(--brand),var(--brand2));color:#fff;display:flex;flex-direction:row-reverse;align-items:center;justify-content:space-between}
+.logo{font-size:19px;font-weight:700}
+.menu{position:relative}
+.dots{width:42px;height:42px;border:none;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;font-size:26px;cursor:pointer}
+.dropdown{position:absolute;left:0;top:50px;width:240px;background:var(--surface);color:var(--text);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.3);padding:8px;opacity:0;visibility:hidden;transform:translateY(-8px) scale(.97);transform-origin:top left;transition:all .2s}
+.dropdown.open{opacity:1;visibility:visible;transform:none}
+.dropdown a,.dropdown button{display:block;width:100%;padding:11px 12px;border:none;background:none;color:inherit;font-size:15px;text-decoration:none;text-align:left;border-radius:9px;cursor:pointer}
+.dropdown a:hover,.dropdown button:hover{background:var(--bg)}
+.dropdown a.current{background:var(--bg);color:var(--brand);font-weight:700}
+.dropdown hr{border:none;border-top:1px solid var(--line);margin:6px 4px}
+.main{max-width:1100px;margin:0 auto;padding:calc(80px + env(safe-area-inset-top,0px)) 16px 30px}
+h1{font-size:25px}.sub{color:var(--muted);margin:4px 0 20px}
+.box{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+h2{font-size:17px;margin-bottom:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px}
+.card{background:var(--surface);border-radius:16px;box-shadow:var(--shadow);padding:16px}
+.card b{display:block;font-size:22px;margin-top:4px}.card span{color:var(--muted);font-size:13px}
+.card.w b{color:var(--warn)}.card.d b{color:var(--danger)}.card.g b{color:var(--ok)}
+.form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+input,select,textarea{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);font-size:15px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--brand)}
+textarea{min-height:90px;font-family:monospace;font-size:12px}
+.btn{border:none;border-radius:10px;padding:11px 18px;font-size:15px;font-weight:600;cursor:pointer;color:#fff;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.btn.ghost{background:var(--bg);color:var(--text);border:1px solid var(--line)}
+.btn.red{background:rgba(229,72,77,.14);color:var(--danger)}
+.act{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:560px}
+th,td{padding:11px 10px;text-align:left;border-bottom:1px solid var(--line);font-size:14px}
+th{font-size:12px;text-transform:uppercase;color:var(--muted);background:var(--bg)}
+.badge{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.b-ok{background:rgba(22,163,74,.15);color:var(--ok)}.b-low,.b-soon{background:rgba(217,119,6,.15);color:var(--warn)}.b-expired{background:rgba(229,72,77,.15);color:var(--danger)}
+.rb{border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;margin-right:4px;background:rgba(15,157,138,.14);color:var(--brand)}
+.rb.d{background:rgba(229,72,77,.14);color:var(--danger)}
+.empty{text-align:center;color:var(--muted);padding:22px}
+.total{display:flex;justify-content:space-between;font-size:20px;font-weight:800;margin-top:12px}
+#receipt{display:none}
+@media print{body>*:not(#receipt){display:none!important}#receipt{display:block;padding:20px;color:#000;background:#fff;font-size:14px}#receipt table{min-width:0}}
+</style>
+</head>
+<body>
+<header class="header">
+<div class="logo" id="logo">💊 PharmaCare</div>
+<div class="menu">
+<button class="dots" id="dots" aria-label="Open menu">⋮</button>
+<nav class="dropdown" id="dropdown">
+<a href="#dashboard">📊 Dashboard</a><a href="#medicines">💊 Medicines</a><a href="#sales">🛒 Sales (POS)</a><a href="#suppliers">🚚 Suppliers</a><a href="#reports">📈 Reports</a><a href="#settings">⚙️ Settings</a><hr>
+<button id="themeBtn" type="button">🌙 Dark Mode</button>
+</nav></div>
+</header>
+<main class="main">
+
+<section id="v-dashboard">
+<h1>Dashboard</h1><p class="sub">Overview of your pharmacy</p>
+<div class="cards" id="cards"></div>
+<div class="box"><h2>⚠️ Needs Attention</h2><div class="tw"><table><thead><tr><th>Medicine</th><th>Qty</th><th>Expiry</th><th>Status</th></tr></thead><tbody id="alerts"></tbody></table></div></div>
+</section>
+
+<section id="v-medicines" hidden>
+<h1>Medicines</h1><p class="sub">Manage your inventory</p>
+<div class="box"><h2 id="mTitle">Add Medicine</h2>
+<div class="form">
+<input id="mName" placeholder="Medicine name"><input id="mCat" placeholder="Category (e.g. Antibiotic)"><input id="mBatch" placeholder="Batch number">
+<input id="mQty" type="number" min="0" placeholder="Quantity"><input id="mCost" type="number" min="0" step="any" placeholder="Cost price"><input id="mPrice" type="number" min="0" step="any" placeholder="Sale price">
+<input id="mExp" type="date" aria-label="Expiry date"><select id="mSup" aria-label="Supplier"></select>
+</div>
+<div class="act"><button class="btn" id="mSave" type="button">➕ Add Medicine</button><button class="btn ghost" id="mCancel" type="button" hidden>Cancel</button></div></div>
+<div class="box"><input id="mSearch" placeholder="🔍 Search by name, category or batch..." aria-label="Search">
+<div class="tw" style="margin-top:12px"><table><thead><tr><th>Name</th><th>Category</th><th>Batch</th><th>Qty</th><th>Price</th><th>Expiry</th><th>Status</th><th></th></tr></thead><tbody id="medTable"></tbody></table></div></div>
+</section>
+
+<section id="v-sales" hidden>
+<h1>Sales (POS)</h1><p class="sub">Sell medicines and print receipts</p>
+<div class="box"><h2>New Sale</h2>
+<div class="form"><select id="sMed" aria-label="Medicine"></select><input id="sQty" type="number" min="1" value="1" aria-label="Quantity"><button class="btn" id="sAdd" type="button">➕ Add to Cart</button></div></div>
+<div class="box"><h2>Cart</h2>
+<div class="tw"><table><thead><tr><th>Medicine</th><th>Qty</th><th>Price</th><th>Subtotal</th><th></th></tr></thead><tbody id="cartTable"></tbody></table></div>
+<div class="total"><span>Total</span><span id="cartTotal">0</span></div>
+<div class="form" style="margin-top:12px"><input id="cName" placeholder="Customer name (optional)"><select id="sPay" aria-label="Payment"><option>Cash</option><option>Card</option><option>Credit</option></select></div>
+<div class="act"><button class="btn" id="sDone" type="button">✅ Complete Sale</button><button class="btn ghost" id="sClear" type="button">Clear Cart</button></div></div>
+</section>
+
+<section id="v-suppliers" hidden>
+<h1>Suppliers</h1><p class="sub">Companies you buy medicines from</p>
+<div class="box"><div class="form"><input id="pName" placeholder="Supplier name"><input id="pPhone" placeholder="Phone"><input id="pAddr" placeholder="Address"></div>
+<div class="act"><button class="btn" id="pSave" type="button">➕ Add Supplier</button></div></div>
+<div class="box"><div class="tw"><table><thead><tr><th>Name</th><th>Phone</th><th>Address</th><th></th></tr></thead><tbody id="supTable"></tbody></table></div></div>
+</section>
+
+<section id="v-reports" hidden>
+<h1>Reports</h1><p class="sub">Sales, profit and backup</p>
+<div class="cards" id="repCards"></div>
+<div class="box"><h2>Sales History</h2><div class="tw"><table><thead><tr><th>Date</th><th>Customer</th><th>Items</th><th>Payment</th><th>Total</th><th></th></tr></thead><tbody id="histTable"></tbody></table></div></div>
+<div class="box"><h2>Backup</h2><textarea id="bk" placeholder="Backup data appears here. To restore, paste it here and press Import."></textarea>
+<div class="act"><button class="btn" id="bkOut" type="button">Export</button><button class="btn ghost" id="bkIn" type="button">Import</button></div></div>
+</section>
+
+<section id="v-settings" hidden>
+<h1>Settings</h1><p class="sub">Pharmacy preferences</p>
+<div class="box"><div class="form"><input id="setName" placeholder="Pharmacy name" aria-label="Pharmacy name"><input id="setCur" placeholder="Currency (AFN, USD)" aria-label="Currency"><input id="setLow" type="number" min="0" placeholder="Low stock level" aria-label="Low stock level"></div>
+<div class="act"><button class="btn" id="setSave" type="button">💾 Save Settings</button><button class="btn red" id="wipe" type="button">🗑️ Clear All Data</button></div></div>
+</section>
+
+</main>
+<div id="receipt"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+let db={meds:[],sales:[],sups:[],set:{name:"PharmaCare",cur:"AFN",low:10}};
+try{const s=JSON.parse(localStorage.getItem("pharma_v1"));if(s)db={...db,...s,set:{...db.set,...s.set}}}catch(e){}
+const save=()=>{try{localStorage.setItem("pharma_v1",JSON.stringify(db))}catch(e){}};
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const money=n=>(+n||0).toLocaleString(undefined,{maximumFractionDigits:2})+" "+esc(db.set.cur);
+const today=()=>new Date().toISOString().slice(0,10);
+const days=d=>Math.ceil((new Date(d)-new Date(today()))/864e5);
+const st=m=>{const d=days(m.exp);if(d<0)return["expired","Expired"];if(d<=60)return["soon","Expiring"];if(m.qty<=db.set.low)return["low","Low stock"];return["ok","In stock"]};
+const none=(n,t)=>`<tr><td colspan="${n}" class="empty">${t}</td></tr>`;
+let editId=null,cart=[];
+
+/* menu + theme */
+const dd=$("dropdown");
+const tm=o=>dd.classList.toggle("open",o);
+$("dots").onclick=e=>{e.stopPropagation();tm()};
+document.addEventListener("click",e=>{if(!dd.contains(e.target))tm(false)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")tm(false)});
+function theme(d){document.documentElement.dataset.theme=d?"dark":"light";$("themeBtn").textContent=d?"☀️ Light Mode":"🌙 Dark Mode"}
+try{const t=localStorage.getItem("pharma_theme");theme(t?t==="dark":matchMedia("(prefers-color-scheme:dark)").matches)}catch(e){theme(false)}
+$("themeBtn").onclick=()=>{const d=document.documentElement.dataset.theme!=="dark";theme(d);try{localStorage.setItem("pharma_theme",d?"dark":"light")}catch(e){}};
+
+/* routing */
+const V=["dashboard","medicines","sales","suppliers","reports","settings"];
+function route(){const v=V.includes(location.hash.slice(1))?location.hash.slice(1):"dashboard";
+V.forEach(x=>$("v-"+x).hidden=x!==v);
+dd.querySelectorAll("a").forEach(a=>a.classList.toggle("current",a.getAttribute("href")==="#"+v));
+tm(false);draw();window.scrollTo(0,0)}
+addEventListener("hashchange",route);
+
+/* draw */
+function draw(){
+$("logo").textContent="💊 "+db.set.name;document.title=db.set.name+" – Pharmacy";
+const M=db.meds,ts=db.sales.filter(s=>s.date.slice(0,10)===today());
+const cnt=f=>M.filter(f).length;
+$("cards").innerHTML=[
+["Medicines",M.length,""],["Stock Value",money(M.reduce((a,m)=>a+m.qty*m.cost,0)),""],
+["Today’s Sales",money(ts.reduce((a,s)=>a+s.total,0)),"g"],["Low Stock",cnt(m=>days(m.exp)>=0&&m.qty<=db.set.low),"w"],
+["Expiring (60 days)",cnt(m=>days(m.exp)>=0&&days(m.exp)<=60),"w"],["Expired",cnt(m=>days(m.exp)<0),"d"]
+].map(c=>`<div class="card ${c[2]}"><span>${c[0]}</span><b>${c[1]}</b></div>`).join("");
+const al=M.filter(m=>st(m)[0]!=="ok").sort((a,b)=>a.exp.localeCompare(b.exp)).slice(0,10);
+$("alerts").innerHTML=al.length?al.map(m=>{const s=st(m);return`<tr><td>${esc(m.name)}</td><td>${m.qty}</td><td>${esc(m.exp)}</td><td><span class="badge b-${s[0]}">${s[1]}</span></td></tr>`}).join(""):none(4,"All good. Nothing needs attention. ✅");
+
+const q=$("mSearch").value.trim().toLowerCase();
+const rows=M.filter(m=>!q||[m.name,m.cat,m.batch].some(v=>String(v).toLowerCase().includes(q)));
+$("medTable").innerHTML=rows.length?rows.map(m=>{const s=st(m);return`<tr><td>${esc(m.name)}</td><td>${esc(m.cat)}</td><td>${esc(m.batch)}</td><td>${m.qty}</td><td>${money(m.price)}</td><td>${esc(m.exp)}</td><td><span class="badge b-${s[0]}">${s[1]}</span></td><td><button class="rb" data-a="edit" data-i="${m.id}">Edit</button><button class="rb d" data-a="del" data-i="${m.id}">Delete</button></td></tr>`}).join(""):none(8,M.length?"No medicines match.":"No medicines yet. Add your first one above.");
+
+const sv=$("mSup").value;
+$("mSup").innerHTML='<option value="">Supplier (optional)</option>'+db.sups.map(s=>`<option value="${esc(s.name)}">${esc(s.name)}</option>`).join("");$("mSup").value=sv;
+const mv=$("sMed").value;
+$("sMed").innerHTML=M.filter(m=>m.qty>0&&days(m.exp)>=0).map(m=>`<option value="${m.id}">${esc(m.name)} – ${m.qty} left – ${money(m.price)}</option>`).join("")||'<option value="">No medicines available</option>';$("sMed").value=mv;
+$("cartTable").innerHTML=cart.length?cart.map((c,i)=>`<tr><td>${esc(c.name)}</td><td>${c.qty}</td><td>${money(c.price)}</td><td>${money(c.qty*c.price)}</td><td><button class="rb d" data-a="rm" data-i="${i}">Remove</button></td></tr>`).join(""):none(5,"Cart is empty.");
+$("cartTotal").textContent=money(cart.reduce((a,c)=>a+c.qty*c.price,0));
+
+$("supTable").innerHTML=db.sups.length?db.sups.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.phone)}</td><td>${esc(s.addr)}</td><td><button class="rb d" data-a="sdel" data-i="${s.id}">Delete</button></td></tr>`).join(""):none(4,"No suppliers yet.");
+
+const rev=db.sales.reduce((a,s)=>a+s.total,0),pr=db.sales.reduce((a,s)=>a+s.items.reduce((b,i)=>b+(i.price-i.cost)*i.qty,0),0);
+$("repCards").innerHTML=`<div class="card"><span>Sales Count</span><b>${db.sales.length}</b></div><div class="card g"><span>Total Revenue</span><b>${money(rev)}</b></div><div class="card g"><span>Total Profit</span><b>${money(pr)}</b></div>`;
+$("histTable").innerHTML=db.sales.length?db.sales.slice().reverse().slice(0,50).map(s=>`<tr><td>${new Date(s.date).toLocaleString()}</td><td>${esc(s.cust||"Walk-in")}</td><td>${s.items.length}</td><td>${esc(s.pay)}</td><td>${money(s.total)}</td><td><button class="rb" data-a="rcpt" data-i="${s.id}">Receipt</button></td></tr>`).join(""):none(6,"No sales yet.");
+
+if(document.activeElement!==$("setName")){$("setName").value=db.set.name;$("setCur").value=db.set.cur;$("setLow").value=db.set.low}
+}
+
+/* medicines */
+function resetMed(){["mName","mCat","mBatch","mQty","mCost","mPrice","mExp"].forEach(i=>$(i).value="");editId=null;$("mTitle").textContent="Add Medicine";$("mSave").textContent="➕ Add Medicine";$("mCancel").hidden=true}
+$("mSave").onclick=()=>{
+const m={name:$("mName").value.trim(),cat:$("mCat").value.trim(),batch:$("mBatch").value.trim(),qty:+$("mQty").value,cost:+$("mCost").value||0,price:+$("mPrice").value,exp:$("mExp").value,sup:$("mSup").value};
+if(!m.name||!m.exp||$("mQty").value===""||!m.price){alert("Please enter name, quantity, sale price and expiry date");return}
+if(editId)Object.assign(db.meds.find(x=>x.id===editId),m);else db.meds.push({id:uid(),...m});
+save();resetMed();draw()};
+$("mCancel").onclick=resetMed;
+$("mSearch").oninput=draw;
+
+/* sales */
+$("sAdd").onclick=()=>{
+const m=db.meds.find(x=>x.id===$("sMed").value),n=+$("sQty").value;
+if(!m||!(n>0)){alert("Choose a medicine and quantity");return}
+const ex=cart.find(c=>c.id===m.id),have=(ex?ex.qty:0)+n;
+if(have>m.qty){alert("Not enough stock. Only "+m.qty+" available.");return}
+if(ex)ex.qty=have;else cart.push({id:m.id,name:m.name,qty:n,price:m.price,cost:m.cost});
+$("sQty").value=1;draw()};
+$("sClear").onclick=()=>{cart=[];draw()};
+$("sDone").onclick=()=>{
+if(!cart.length){alert("Cart is empty");return}
+cart.forEach(c=>{const m=db.meds.find(x=>x.id===c.id);if(m)m.qty-=c.qty});
+const s={id:uid(),date:new Date().toISOString(),items:cart,total:cart.reduce((a,c)=>a+c.qty*c.price,0),cust:$("cName").value.trim(),pay:$("sPay").value};
+db.sales.push(s);save();cart=[];$("cName").value="";draw();receipt(s)};
+function receipt(s){
+$("receipt").innerHTML=`<h2 style="text-align:center">${esc(db.set.name)}</h2><p style="text-align:center">${new Date(s.date).toLocaleString()}</p><p>Customer: ${esc(s.cust||"Walk-in")} | ${esc(s.pay)}</p><table style="margin:10px 0"><tr><th>Item</th><th>Qty</th><th>Total</th></tr>${s.items.map(i=>`<tr><td>${esc(i.name)}</td><td>${i.qty}</td><td>${money(i.qty*i.price)}</td></tr>`).join("")}</table><h3>Total: ${money(s.total)}</h3><p style="text-align:center;margin-top:12px">Thank you!</p>`;
+if(confirm("Sale completed. Print receipt?"))window.print()}
+
+/* suppliers */
+$("pSave").onclick=()=>{const n=$("pName").value.trim();if(!n){alert("Enter supplier name");return}
+db.sups.push({id:uid(),name:n,phone:$("pPhone").value.trim(),addr:$("pAddr").value.trim()});
+["pName","pPhone","pAddr"].forEach(i=>$(i).value="");save();draw()};
+
+/* row buttons */
+document.addEventListener("click",e=>{
+const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a,i=b.dataset.i;
+if(a==="edit"){const m=db.meds.find(x=>x.id===i);editId=i;
+$("mName").value=m.name;$("mCat").value=m.cat;$("mBatch").value=m.batch;$("mQty").value=m.qty;$("mCost").value=m.cost;$("mPrice").value=m.price;$("mExp").value=m.exp;$("mSup").value=m.sup||"";
+$("mTitle").textContent="Edit Medicine";$("mSave").textContent="💾 Save Changes";$("mCancel").hidden=false;scrollTo({top:0,behavior:"smooth"})}
+if(a==="del"&&confirm("Delete this medicine?")){db.meds=db.meds.filter(x=>x.id!==i);if(editId===i)resetMed();save();draw()}
+if(a==="rm"){cart.splice(+i,1);draw()}
+if(a==="sdel"&&confirm("Delete this supplier?")){db.sups=db.sups.filter(x=>x.id!==i);save();draw()}
+if(a==="rcpt")receipt(db.sales.find(x=>x.id===i))});
+
+/* backup + settings */
+$("bkOut").onclick=()=>{$("bk").value=JSON.stringify(db);$("bk").select()};
+$("bkIn").onclick=()=>{try{const d=JSON.parse($("bk").value);if(!Array.isArray(d.meds)||!Array.isArray(d.sales))throw 0;
+if(!confirm("Replace all current data with this backup?"))return;db={...db,...d,set:{...db.set,...d.set}};save();draw();alert("Backup restored")}catch(e){alert("Invalid backup data")}};
+$("setSave").onclick=()=>{db.set={name:$("setName").value.trim()||"PharmaCare",cur:$("setCur").value.trim()||"AFN",low:+$("setLow").value||0};save();draw();alert("Settings saved")};
+$("wipe").onclick=()=>{if(confirm("Delete ALL data? This cannot be undone.")){db={meds:[],sales:[],sups:[],set:{name:"PharmaCare",cur:"AFN",low:10}};cart=[];save();draw()}};
+
+route();
+if("serviceWorker" in navigator){addEventListener("load",()=>{try{navigator.serviceWorker.register("sw.js")}catch(e){}})}
+</script>
+</body>
+</html>
